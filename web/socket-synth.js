@@ -34,8 +34,9 @@ var example = example || {};
     };
 
     example.SocketSynth = function () {
+        // change the url with the ip which runs node "ws://192.168.0.34:8081"
         this.oscPort = new osc.WebSocketPort({
-            url: "ws://192.168.0.34:8081"
+            url: "ws://127.0.0.1:8081"
         });
 
         this.listen();

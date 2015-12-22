@@ -1,5 +1,5 @@
 {
-    "name": "videodrömm server",
+    "name": "osc.js-examples-web",
     "main": "index.js",
     "version": "0.1.1",
     "description": "Uses osc.js in a web browser and relays webSocket messages to other clients.",
