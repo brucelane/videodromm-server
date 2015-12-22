@@ -1,9 +1,10 @@
 /*
-Original code from Colin Clark https://github.com/colinbdclark/osc.js-examples
+  Original code from Colin Clark https://github.com/colinbdclark/osc.js-examples and https://github.com/florkestra/websocket-relay-server
 */
 var osc = require("osc"),
     express = require("express"),
-    WebSocket = require("ws");
+    WebSocket = require("ws"),
+    config = require(__dirname + "/config.json");
 
 var getIPAddresses = function () {
     var os = require("os"),
@@ -41,21 +42,40 @@ udpPort.on("ready", function () {
 udpPort.open();
 
 // Create an Express-based Web Socket server to which OSC messages will be relayed.
-var appResources = __dirname + "/web",
+var appResources = config.webRoot.indexOf("/") === 0 ? config.webRoot : __dirname + "/" + config.webRoot,
     app = express(),
-    server = app.listen(8081),
+    server = app.listen(config.port),
     wss = new WebSocket.Server({
         server: server
     });
 
 app.use("/", express.static(appResources));
+console.log("Server listening on port " + config.port);
+
+var allConnectedSockets = [];
+
 wss.on("connection", function (socket) {
     console.log("A Web Socket connection has been established!");
+    allConnectedSockets.push(socket);
+
     var socketPort = new osc.WebSocketPort({
         socket: socket
     });
 
     var relay = new osc.Relay(udpPort, socketPort, {
         raw: true
+    });
+
+    socket.on("message", function (data) {
+        allConnectedSockets.forEach(function (someSocket) {
+            if (someSocket !== socket) {
+                someSocket.send(data);
+            }
+        });
+    });
+
+    socket.on("close", function () {
+        var idx = allConnectedSockets.indexOf(socket);
+        allConnectedSockets.splice(idx, 1);
     });
 });
